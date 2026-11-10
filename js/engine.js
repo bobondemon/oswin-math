@@ -1,12 +1,12 @@
-// 關卡引擎:講解 → 題目 → 提示 → 評分(星星/XP)。答錯不扣血,只給提示與解答。
+// 關卡引擎:講解 → 題目 → 提示。答錯不懲罰,只給提示與解答。
+// 沒有 XP/星星/血條:過關的回饋是「劇情推進」(見 js/story.js)。
 const Engine = (() => {
   const PRAISE = ['答對了!👏', '太棒了!🎉', '漂亮!✨', '就是這樣!💪', '你學得好快!🚀', '穩穩的!😎'];
   const view = () => document.getElementById('view');
 
   function start(level, nextId, exit, startIdx, prevId) {
     const steps = level.steps;
-    const run = { i: Math.min(startIdx || 0, steps.length - 1), mistakes: 0, hints: 0, xp: 0, qDone: 0 };
-    const gain = n => { run.xp += n; Store.addXP(n); window.refreshStats && refreshStats(); };
+    const run = { i: Math.min(startIdx || 0, steps.length - 1) };
 
     function frame(inner) {
       const pct = Math.round(run.i / steps.length * 100);
@@ -24,7 +24,7 @@ const Engine = (() => {
 
     function show() {
       if (run.i >= steps.length) return finish();
-      Store.setResume({ id: level.id, i: run.i }); // 記住進度,匯入存檔後可接續
+      Store.setResume({ id: level.id, i: run.i }); // 記住進度,讀檔後可接續
       const st = steps[run.i];
       if (st.t === 'explain') return showExplain(st);
       showQ(st);
@@ -58,7 +58,7 @@ const Engine = (() => {
           $('a').onkeydown = e => { if (e.key === 'Enter') submit($('a').value); };
           $('a').focus();
         }
-        $('hint').onclick = () => { run.hints++; fb('hint', '💡 ' + q.hint); };
+        $('hint').onclick = () => fb('hint', '💡 ' + q.hint);
         after();
       };
       const fb = (cls, html) => { $('fb').innerHTML = `<div class="fb ${cls}">${html}</div>`; after(); };
@@ -73,13 +73,11 @@ const Engine = (() => {
         if (r === 'unreduced') return fb('hint', '數值對了!👍 不過還可以再約分成最簡分數,再試一次~');
         if (r === 'ok') {
           solved = true;
-          gain(attempts === 0 ? 10 : 5);
-          run.qDone++;
           $('inp').querySelectorAll('input,button').forEach(e => e.disabled = true);
-          fb('ok', `${PRAISE[Math.floor(Math.random() * PRAISE.length)]} ${attempts === 0 ? '+10 XP' : '+5 XP(錯了還願意再試,最棒!)'}${q.sol ? '<div style="font-weight:400;margin-top:6px">' + q.sol + '</div>' : ''}`);
+          fb('ok', `${PRAISE[Math.floor(Math.random() * PRAISE.length)]}${attempts ? '(錯了還願意再試,最棒!)' : ''}${q.sol ? '<div style="font-weight:400;margin-top:6px">' + q.sol + '</div>' : ''}`);
           return next();
         }
-        attempts++; run.mistakes++;
+        attempts++;
         Store.addWrong({ id: level.id, text: q.text, ts: Date.now() });
         if (attempts === 1) return fb('hint', '差一點點!看看提示再試一次 💪<br>' + q.hint);
         // 第二次還是錯:給完整解答,再換一題同類型
@@ -94,29 +92,26 @@ const Engine = (() => {
     }
 
     function finish() {
-      const score = run.mistakes + Math.floor(run.hints / 2);
-      const stars = score === 0 ? 3 : score <= 2 ? 2 : 1;
-      const bonus = 20 + stars * 5;
-      gain(bonus);
-      Store.setStars(level.id, stars);
+      const sub = Story.subOf(level.id);
+      const wasComplete = !!sub && Story.isSubDone(sub);
+      Store.markDone(level.id);
       Store.setResume(null);
-      Store.touchDay();
-      window.refreshStats && refreshStats();
+      const isLast = !!sub && sub.levels[sub.levels.length - 1].id === level.id;
+      // 正常模式:這關讓子主題「剛好」全部過關才推進劇情;金手指模式不記錄進度,走到子主題最後一關就預覽
+      const showBeat = !!sub && Story.beatOf(sub) && (Store.gold() ? isLast : (!wasComplete && Story.isSubDone(sub)));
       view().innerHTML = `<div class="card pop" style="text-align:center">
-        <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-        <h2>${['', '完成了!每一步都在進步 🌱', '很棒!再接再厲 🌟', '完美通關!🏆'][stars]}</h2>
-        <p>本關獲得 <b>${run.xp} XP</b>(含通關獎勵 +${bonus})</p>
+        <h2>🎉 過關!</h2>
         ${level.learned ? `<div class="fb ok" style="text-align:left">📝 你學會了:${level.learned}</div>` : ''}
+        ${showBeat ? '<p class="big">🎬 這個子主題全部完成,劇情繼續!</p>' : ''}
+        </div>
+        ${showBeat ? Story.html(sub) : ''}
         <div class="row" style="justify-content:center">
           ${nextId ? '<button class="btn" id="nx">下一關 ➜</button>' : ''}
           <button class="btn sec" id="map">回地圖</button>
-          ${stars < 3 ? '<button class="btn sec" id="again">再挑戰拿 3 星</button>' : ''}
-        </div></div>`;
+        </div>`;
       Widgets.render(view());
       if (nextId) document.getElementById('nx').onclick = () => { location.hash = '#/play/' + nextId; };
       document.getElementById('map').onclick = exit;
-      const ag = document.getElementById('again');
-      if (ag) ag.onclick = () => start(level, nextId, exit);
     }
     show();
   }

@@ -21,28 +21,22 @@ async function toggleGold() {
 }
 
 function refreshStats() {
-  const s = Store.get(), lv = Store.level();
-  document.getElementById('lv').textContent = 'Lv.' + lv;
-  document.getElementById('xp').textContent = s.xp + ' XP';
-  document.getElementById('xpfill').style.width = (s.xp % 100) + '%';
-  document.getElementById('streak').textContent = '🔥' + s.streak;
-  const p = s.profile;
-  document.getElementById('me').textContent = p ? `${p.avatar} ${p.name}` : '';
+  const n = Story.unlocked().length;
+  document.getElementById('storybtn').textContent = '📖 劇情回顧' + (n ? ` (${n})` : '');
 }
 
 function status(lv, idx, list) {
-  if (Store.stars(lv.id)) return 'done';
+  if (Store.isDone(lv.id)) return 'done';
   if (UNLOCK_ALL) return 'open';
-  const firstOpen = list.findIndex(l => !Store.stars(l.id));
+  const firstOpen = list.findIndex(l => !Store.isDone(l.id));
   return idx === firstOpen ? 'open' : 'locked';
 }
 
 function renderMap() {
   const list = allLevels();
-  const p = Store.profile() || { avatar: '🧙', name: '家長' };
-  let html = `<div class="card npc"><div class="face">${esc(p.avatar)}</div><div>
-    <b>歡迎,${esc(p.name)}!</b><br>每一關都有講解、互動和練習。答錯不會扣分,只會給你提示。<br>
-    通關拿星星、累積經驗值,一路升級吧!</div></div>`;
+  let html = `<div class="card npc"><div class="face">🌊</div><div>
+    <b>歡迎來到杜王町的夏天!</b><br>每一關都有講解、互動和練習,答錯不會被處罰,只會給你提示。<br>
+    把一個主題的關卡全部通過,就能解鎖下一段<b>荒謬又離譜的劇情</b>!</div></div>`;
   if (Store.gold()) html = `<div class="fb hint">🔑 <b>金手指模式</b>:所有關卡已開放,可自由瀏覽。此模式下的作答<b>不會</b>記錄到孩子的進度。
     <button class="btn sec" id="goldoff" style="margin-left:8px;padding:4px 12px;font-size:14px">關閉</button>
     <button class="btn sec" id="goldreset" style="margin-left:8px;padding:4px 12px;font-size:14px">🗑 清除孩子進度</button></div>` + html;
@@ -56,9 +50,9 @@ function renderMap() {
       if (!s.levels.length) { html += `<div class="sub" style="color:var(--mut)">🔒 即將開放</div>`; return; }
       html += `<div class="path" style="margin-bottom:26px">`;
       s.levels.forEach(l => {
-        const idx = list.indexOf(l), st = status(l, idx, list), n = Store.stars(l.id);
+        const idx = list.indexOf(l), st = status(l, idx, list);
         html += `<button class="node ${st}" data-id="${l.id}" ${st === 'locked' ? 'disabled' : ''}>
-          ${st === 'locked' ? '🔒' : l.icon || '⚔️'}<small>${n ? '⭐'.repeat(n) : ''}</small><span class="lbl">${l.title.replace(/^[^\s]+\s/, '')}</span></button>`;
+          ${st === 'locked' ? '🔒' : l.icon || '⚔️'}<small>${st === 'done' ? '✔' : ''}</small><span class="lbl">${l.title.replace(/^[^\s]+\s/, '')}</span></button>`;
       });
       html += `</div>`;
     });
@@ -69,45 +63,32 @@ function renderMap() {
   const go = document.getElementById('goldoff'); if (go) go.onclick = toggleGold;
   const gr = document.getElementById('goldreset');
   if (gr) gr.onclick = () => {
-    if (confirm('確定要清除這台瀏覽器上孩子的全部進度(XP、星星、暱稱)嗎?此動作無法復原。')) { Store.reset(); location.reload(); }
+    if (confirm('確定要清除這台瀏覽器上孩子的全部進度(已完成的關卡與劇情)嗎?此動作無法復原。')) { Store.reset(); location.reload(); }
   };
   const rb = document.getElementById('resume');
   if (rb) rb.onclick = () => { location.hash = `#/play/${r.id}@${r.i}`; };
   v.querySelectorAll('.node:not(.locked)').forEach(b => b.onclick = () => { location.hash = '#/play/' + b.dataset.id; });
 }
 
-const AVATARS = ['🦸', '🧙', '🥷', '🧝', '🦊', '🐉', '🦄', '🤖', '🐱', '🐼', '🚀', '🧛'];
 const esc = t => t.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function renderOnboard(editing) {
-  const cur = Store.profile() || { name: '', avatar: AVATARS[0] };
-  let pick = cur.avatar;
-  const v = document.getElementById('view');
-  v.innerHTML = `<div class="card pop" style="text-align:center">
-    <h2>${editing ? '更改角色' : '歡迎來到數學冒險王國!'}</h2>
-    <p>選一個你的角色頭像,再取個冒險者名字吧!</p>
-    <div class="avs">${AVATARS.map(a => `<button class="av ${a === pick ? 'sel' : ''}" data-a="${a}">${a}</button>`).join('')}</div>
-    <input class="ans" id="nick" maxlength="10" placeholder="你的暱稱" value="${esc(cur.name)}" style="text-align:center">
-    <div class="row" style="justify-content:center"><button class="btn" id="go">${editing ? '儲存' : '出發!🚀'}</button>
-    ${editing ? '<button class="btn sec" id="cancel">取消</button>' : ''}</div></div>`;
-  v.querySelectorAll('.av').forEach(b => b.onclick = () => {
-    pick = b.dataset.a; v.querySelectorAll('.av').forEach(x => x.classList.toggle('sel', x === b));
-  });
-  const nick = document.getElementById('nick');
-  const done = () => {
-    const name = nick.value.trim();
-    if (!name) { nick.focus(); nick.style.borderColor = 'var(--bad)'; return; }
-    Store.setProfile({ name, avatar: pick }); location.hash = '#/'; route();
-  };
-  document.getElementById('go').onclick = done;
-  nick.onkeydown = e => { if (e.key === 'Enter') done(); };
-  const c = document.getElementById('cancel'); if (c) c.onclick = () => { location.hash = '#/'; route(); };
+function renderStory() {
+  const subs = Story.unlocked();
+  const all = COURSE_DATA.flatMap(c => c.subtopics).filter(x => Story.beatOf(x));
+  let html = `<h2>📖 劇情回顧</h2><p class="sub">過完每個子主題就會解鎖一段劇情。${Store.gold() ? '(金手指:全部解鎖)' : ''}</p>`;
+  if (!subs.length) html += `<div class="card">還沒有解鎖任何劇情。先去通關一個子主題吧!</div>`;
+  subs.forEach(x => { html += Story.html(x); });
+  const locked = all.length - subs.length;
+  if (locked > 0) html += `<div class="card" style="color:var(--mut)">🔒 還有 ${locked} 段劇情等你解鎖…</div>`;
+  html += `<div class="row"><button class="btn sec" id="back">回地圖</button></div>`;
+  const v = document.getElementById('view'); v.innerHTML = html;
+  document.getElementById('back').onclick = () => { location.hash = '#/'; };
+  Widgets.render(v);
 }
 
 function route() {
   refreshStats();
-  if (!Store.profile() && !Store.gold()) return renderOnboard(false);
-  if (location.hash === '#/profile') return renderOnboard(true);
+  if (location.hash === '#/story') return renderStory();
   const m = location.hash.match(/^#\/play\/([^@]+)(?:@(\d+))?$/);
   if (m) {
     const list = allLevels(), i = list.findIndex(l => l.id === m[1]);
@@ -119,7 +100,6 @@ function route() {
   renderMap();
 }
 
-document.getElementById('me').onclick = () => { location.hash = '#/profile'; };
 function toast(msg) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
@@ -129,8 +109,7 @@ const JSON_TYPE = [{ description: '數學冒險存檔', accept: { 'application/j
 // 存檔:支援的瀏覽器(Chrome/Edge)會跳出視窗讓使用者選位置與檔名;其他瀏覽器改問檔名後下載
 async function saveGame() {
   if (Store.gold()) return toast('金手指模式下不能存檔');
-  const p = Store.profile();
-  const defName = `數學冒險-${p ? p.name : '存檔'}.json`;
+  const defName = '數學冒險-存檔.json';
   const data = Store.exportJSON();
   if (window.showSaveFilePicker) {
     try {

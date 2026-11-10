@@ -46,7 +46,6 @@ input.ans{font-size:20px;padding:8px 12px;border:2px solid var(--line);border-ra
 #inp{margin:10px 0 6px}
 #btns{margin-top:18px}
 .katex{font-size:1.25em}
-.stars{font-size:46px;letter-spacing:6px}
 .big{font-size:22px}
 .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--pri);color:#fff;padding:10px 20px;border-radius:24px;font-weight:700;z-index:20;animation:pop .4s}
 .wd{margin:12px 0;text-align:center}
@@ -63,3 +62,9 @@ input.ans{font-size:20px;padding:8px 12px;border:2px solid var(--line);border-ra
 .av.sel{border-color:var(--pri);box-shadow:0 0 0 4px rgba(108,92,231,.25);transform:scale(1.1)}
 #me{color:var(--ink);font-weight:700}
 @media (max-width:480px){.xpbar{width:56px}body{font-size:16px}}
+
+.beat{background:var(--card);border:2px solid var(--pri);border-radius:16px;padding:16px;margin:14px 0}
+.beat .art{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-bottom:10px}
+.beat .art.ph{height:160px;display:flex;align-items:center;justify-content:center;font-size:64px;background:linear-gradient(135deg,rgba(108,92,231,.25),rgba(253,203,110,.3))}
+.beat .btext p{margin:8px 0}
+.beat audio{width:100%;margin-top:8px}
