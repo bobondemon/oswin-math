@@ -13,11 +13,12 @@ const Engine = (() => {
       view().innerHTML = `<div class="prog"><div style="width:${pct}%"></div></div>
         <h3>${level.title}</h3><div class="card">${inner}</div>
         <div class="row"><button class="btn sec" id="quit">離開</button>
-        ${Store.gold() ? `${run.i > 0 ? '<button class="btn sec" id="gprev">⏮ 上一題</button>' : ''}<button class="btn sec" id="gskip">⏭ 跳下一題</button>` : ''}</div>`;
+        ${Store.gold() ? `${run.i > 0 ? '<button class="btn sec" id="gprev">⏮ 上一題</button>' : ''}<button class="btn sec" id="gskip">⏭ 跳下一題</button><button class="btn sec" id="gfin">🎬 直接過關看劇情</button>` : ''}</div>`;
       document.getElementById('quit').onclick = exit;
-      const gp = document.getElementById('gprev'), gs = document.getElementById('gskip');
+      const gp = document.getElementById('gprev'), gs = document.getElementById('gskip'), gf = document.getElementById('gfin');
       if (gp) gp.onclick = () => { run.i = Math.max(0, run.i - 1); show(); };
       if (gs) gs.onclick = advance;
+      if (gf) gf.onclick = () => { run.i = steps.length; show(); };
     }
     const after = () => { Widgets.render(view()); };
     const advance = () => { run.i++; show(); };
@@ -92,19 +93,16 @@ const Engine = (() => {
     }
 
     function finish() {
-      const sub = Story.subOf(level.id);
-      const wasComplete = !!sub && Story.isSubDone(sub);
       Store.markDone(level.id);
       Store.setResume(null);
-      const isLast = !!sub && sub.levels[sub.levels.length - 1].id === level.id;
-      // 正常模式:這關讓子主題「剛好」全部過關才推進劇情;金手指模式不記錄進度,走到子主題最後一關就預覽
-      const showBeat = !!sub && Story.beatOf(sub) && (Store.gold() ? isLast : (!wasComplete && Story.isSubDone(sub)));
+      // 每過一關就推進一張劇情畫面(有寫劇情的關卡才有)
+      const showBeat = !!Story.beatOf(level);
       view().innerHTML = `<div class="card pop" style="text-align:center">
         <h2>🎉 過關!</h2>
         ${level.learned ? `<div class="fb ok" style="text-align:left">📝 你學會了:${level.learned}</div>` : ''}
-        ${showBeat ? '<p class="big">🎬 這個子主題全部完成,劇情繼續!</p>' : ''}
+        ${showBeat ? '<p class="big">🎬 劇情繼續……</p>' : ''}
         </div>
-        ${showBeat ? Story.html(sub) : ''}
+        ${showBeat ? Story.html(level) : ''}
         <div class="row" style="justify-content:center">
           ${nextId ? '<button class="btn" id="nx">下一關 ➜</button>' : ''}
           <button class="btn sec" id="map">回地圖</button>

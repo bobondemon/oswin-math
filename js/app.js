@@ -36,7 +36,7 @@ function renderMap() {
   const list = allLevels();
   let html = `<div class="card npc"><div class="face">🌊</div><div>
     <b>歡迎來到杜王町的夏天!</b><br>每一關都有講解、互動和練習,答錯不會被處罰,只會給你提示。<br>
-    把一個主題的關卡全部通過,就能解鎖下一段<b>荒謬又離譜的劇情</b>!</div></div>`;
+    每過一關,就會多一張畫面,推進<b>荒謬又離譜的劇情</b>!</div></div>`;
   if (Store.gold()) html = `<div class="fb hint">🔑 <b>金手指模式</b>:所有關卡已開放,可自由瀏覽。此模式下的作答<b>不會</b>記錄到孩子的進度。
     <button class="btn sec" id="goldoff" style="margin-left:8px;padding:4px 12px;font-size:14px">關閉</button>
     <button class="btn sec" id="goldreset" style="margin-left:8px;padding:4px 12px;font-size:14px">🗑 清除孩子進度</button></div>` + html;
@@ -73,13 +73,12 @@ function renderMap() {
 const esc = t => t.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function renderStory() {
-  const subs = Story.unlocked();
-  const all = COURSE_DATA.flatMap(c => c.subtopics).filter(x => Story.beatOf(x));
-  let html = `<h2>📖 劇情回顧</h2><p class="sub">過完每個子主題就會解鎖一段劇情。${Store.gold() ? '(金手指:全部解鎖)' : ''}</p>`;
-  if (!subs.length) html += `<div class="card">還沒有解鎖任何劇情。先去通關一個子主題吧!</div>`;
-  subs.forEach(x => { html += Story.html(x); });
-  const locked = all.length - subs.length;
-  if (locked > 0) html += `<div class="card" style="color:var(--mut)">🔒 還有 ${locked} 段劇情等你解鎖…</div>`;
+  const lvs = Story.unlocked();
+  let html = `<h2>📖 劇情回顧</h2><p class="sub">每過一關就解鎖一張劇情畫面。${Store.gold() ? '(金手指:全部解鎖)' : ''}</p>`;
+  if (!lvs.length) html += `<div class="card">還沒有解鎖任何劇情。先去通關一關吧!</div>`;
+  lvs.forEach(l => { html += Story.html(l); });
+  const locked = Story.total() - lvs.length;
+  if (locked > 0) html += `<div class="card" style="color:var(--mut)">🔒 還有 ${locked} 張劇情畫面等你解鎖…</div>`;
   html += `<div class="row"><button class="btn sec" id="back">回地圖</button></div>`;
   const v = document.getElementById('view'); v.innerHTML = html;
   document.getElementById('back').onclick = () => { location.hash = '#/'; };
@@ -104,12 +103,12 @@ function toast(msg) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
 }
-const JSON_TYPE = [{ description: '數學冒險存檔', accept: { 'application/json': ['.json'] } }];
+const JSON_TYPE = [{ description: '杜王町數學夏令營存檔', accept: { 'application/json': ['.json'] } }];
 
 // 存檔:支援的瀏覽器(Chrome/Edge)會跳出視窗讓使用者選位置與檔名;其他瀏覽器改問檔名後下載
 async function saveGame() {
   if (Store.gold()) return toast('金手指模式下不能存檔');
-  const defName = '數學冒險-存檔.json';
+  const defName = '杜王町數學夏令營-存檔.json';
   const data = Store.exportJSON();
   if (window.showSaveFilePicker) {
     try {
