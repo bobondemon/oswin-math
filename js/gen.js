@@ -10,7 +10,7 @@ const G = {
   // 解析使用者輸入 → {val, n, d, isFrac} 或 null
   parse(s) {
     s = String(s).trim().replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 65248))
-      .replace(/[／÷]/g, '/').replace(/．/g, '.').replace(/－/g, '-').replace(/\s+/g, '');
+      .replace(/[／÷]/g, '/').replace(/．/g, '.').replace(/[－−–]/g, '-').replace(/\s+/g, '');
     let m;
     if ((m = s.match(/^(-?\d+)\/(\d+)$/)) && +m[2] !== 0) return { val: +m[1] / +m[2], n: +m[1], d: +m[2], isFrac: true };
     if (/^-?\d+(\.\d+)?$/.test(s)) return { val: parseFloat(s), isFrac: false };
