@@ -19,6 +19,15 @@ const G = {
   // 檢查答案:回傳 'ok' | 'bad' | 'unreduced' | 'invalid'
   check(q, input) {
     if (q.type === 'choice') return input === q.answer ? 'ok' : 'bad';
+    // multi:多格填空,answer 是數字陣列;unordered=true 時不分先後(例如兩個根)
+    if (q.type === 'multi') {
+      if (!Array.isArray(input)) return 'invalid';
+      const ps = input.map(G.parse);
+      if (ps.some(p => !p)) return 'invalid';
+      const vals = ps.map(p => p.val), ans = q.answer.slice();
+      if (q.unordered) { vals.sort((a, b) => a - b); ans.sort((a, b) => a - b); }
+      return vals.every((v, i) => Math.abs(v - ans[i]) < 1e-9) ? 'ok' : 'bad';
+    }
     const p = G.parse(input);
     if (!p) return 'invalid';
     if (q.type === 'num') return Math.abs(p.val - q.answer) < 1e-9 ? 'ok' : 'bad';

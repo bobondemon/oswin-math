@@ -52,6 +52,15 @@ const Engine = (() => {
           $('inp').innerHTML = q.choices.map((c, i) => `<button class="choice" data-i="${i}">${c}</button>`).join('');
           $('inp').querySelectorAll('.choice').forEach(b => b.onclick = () => submit(+b.dataset.i));
           $('btns').innerHTML = `<button class="btn sec" id="hint">💡 提示</button>`;
+        } else if (q.type === 'multi') {
+          // 多格填空:q.template 以 {} 標出輸入格,格數 = q.answer.length
+          const parts = q.template.split('{}');
+          $('inp').innerHTML = `<div class="multi">` + parts.map((p, i) => `<span>${p}</span>` + (i < q.answer.length ? `<input class="ans sm" id="a${i}" autocomplete="off" placeholder="?">` : '')).join('') + `</div>`;
+          $('btns').innerHTML = `<button class="btn" id="ok">檢查</button><button class="btn sec" id="hint">💡 提示</button>`;
+          const vals = () => q.answer.map((_, i) => $('a' + i).value);
+          $('ok').onclick = () => submit(vals());
+          q.answer.forEach((_, i) => { $('a' + i).onkeydown = e => { if (e.key === 'Enter') { if (i < q.answer.length - 1) $('a' + (i + 1)).focus(); else submit(vals()); } }; });
+          $('a0').focus();
         } else {
           $('inp').innerHTML = `<input class="ans" id="a" autocomplete="off" inputmode="text" placeholder="${q.type === 'frac' ? '例如 3/4' : '輸入數字'}">`;
           $('btns').innerHTML = `<button class="btn" id="ok">檢查</button><button class="btn sec" id="hint">💡 提示</button>`;
@@ -70,7 +79,7 @@ const Engine = (() => {
       function submit(v) {
         if (solved) return;
         const r = G.check(q, v);
-        if (r === 'invalid') return fb('hint', '請輸入數字或分數(像 3/4)喔');
+        if (r === 'invalid') return fb('hint', q.type === 'multi' ? '每一格都要填上數字喔(可以是負數,例如 -3)' : '請輸入數字或分數(像 3/4)喔');
         if (r === 'unreduced') return fb('hint', '數值對了!👍 不過還可以再約分成最簡分數,再試一次~');
         if (r === 'ok') {
           solved = true;

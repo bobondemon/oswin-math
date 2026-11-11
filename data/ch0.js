@@ -279,6 +279,74 @@ const genE = {
   }
 };
 
+// ---- 乘法公式與因式分解題目產生器 ----
+// 顯示 (x + a) 或 (x - a)
+const XA = a => `(x ${a < 0 ? '-' : '+'} ${Math.abs(a)})`;
+const genF = {
+  expand() { // (x+a)(x+b) = x² + □x + □
+    const a = nz(-9, 9), b = nz(-9, 9);
+    return { type: 'multi', answer: [a + b, a * b], template: '$x^2 + $ {} $x + $ {}',
+      text: `展開:$${XA(a)}${XA(b)}$ (填入 x 項係數與常數項,可為負數)`,
+      hint: '分配律:$(x+a)(x+b) = x^2 + ax + bx + ab$。x 的係數是 a+b,常數項是 a×b。',
+      sol: `x 項:$${a} + ${P(b)} = ${a + b}$;常數項:$${P(a)} \\times ${P(b)} = ${a * b}$。所以 $x^2 ${a + b < 0 ? '-' : '+'} ${Math.abs(a + b)}x ${a * b < 0 ? '-' : '+'} ${Math.abs(a * b)}$。` };
+  },
+  square() { // (x±a)² = x² + □x + □
+    const a = nz(-9, 9);
+    return { type: 'multi', answer: [2 * a, a * a], template: '$x^2 + $ {} $x + $ {}',
+      text: `用公式展開:$${XA(a)}^2$`,
+      hint: '$(x+a)^2 = x^2 + 2ax + a^2$(a 是負數時也適用,直接代入)。',
+      sol: `$2a = ${2 * a}$,$a^2 = ${a * a}$。所以 $x^2 ${2 * a < 0 ? '-' : '+'} ${Math.abs(2 * a)}x + ${a * a}$。` };
+  },
+  diffSq() { // (x+a)(x-a) = x² - □
+    const a = G.ri(2, 12);
+    return { type: 'num', answer: a * a, text: `展開 $(x + ${a})(x - ${a}) = x^2 - \\square$,方格中應填什麼數?`,
+      hint: '平方差公式:$(x+a)(x-a) = x^2 - a^2$。',
+      sol: `$(x+${a})(x-${a}) = x^2 - ${a}^2 = x^2 - ${a * a}$。` };
+  },
+  sqNum() { // 速算平方
+    const n = G.pick([10, 20, 30, 40, 50, 100]), d = G.pick([1, 2, 3]) * (Math.random() < 0.5 ? 1 : -1);
+    const v = n + d;
+    return { type: 'num', answer: v * v, text: `用公式速算:$${v}^2 = ?$`,
+      hint: `把 ${v} 拆成 ${n} ${d < 0 ? '-' : '+'} ${Math.abs(d)},用 $(a ${d < 0 ? '-' : '+'} b)^2 = a^2 ${d < 0 ? '-' : '+'} 2ab + b^2$。`,
+      sol: `$${v}^2 = (${n} ${d < 0 ? '-' : '+'} ${Math.abs(d)})^2 = ${n * n} ${d < 0 ? '-' : '+'} ${2 * n * Math.abs(d)} + ${d * d} = ${v * v}$。` };
+  },
+  diffSqNum() { // 速算平方差
+    const n = G.pick([20, 30, 40, 50, 100]), d = G.pick([1, 2, 3, 4, 5]);
+    return { type: 'num', answer: n * n - d * d, text: `用平方差公式速算:$${n + d} \\times ${n - d} = ?$`,
+      hint: `$${n + d} \\times ${n - d} = (${n}+${d})(${n}-${d}) = ${n}^2 - ${d}^2$。`,
+      sol: `$${n}^2 - ${d}^2 = ${n * n} - ${d * d} = ${n * n - d * d}$。` };
+  },
+  common() { // 提公因式
+    const g = G.ri(2, 6), p = G.ri(1, 5), q = G.ri(1, 6);
+    return { type: 'multi', answer: [p, q], template: `$${LIN(g * p, g * q)} = ${g}($ {} $x + $ {} $)$`,
+      text: `提出公因式 ${g}:`,
+      hint: `把每一項都除以 ${g}:$${g * p} \\div ${g}$ 和 $${g * q} \\div ${g}$。`,
+      sol: `$${g * p}x \\div ${g} = ${p}x$,$${g * q} \\div ${g} = ${q}$,所以 $${g}(${LIN(p, q)})$。` };
+  },
+  cross() { // x² + bx + c = (x+p)(x+q)
+    const p = nz(-9, 9), q = nz(-9, 9), b = p + q, c = p * q;
+    return { type: 'multi', unordered: true, answer: [p, q],
+      template: `$x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x ${c < 0 ? '-' : '+'} ${Math.abs(c)} = (x + $ {} $)(x + $ {} $)$`,
+      text: `因式分解(兩格先後次序不拘,可填負數):`,
+      hint: `找兩個數:<b>相乘 = ${c}</b>、<b>相加 = ${b}</b>。`,
+      sol: `${p} × ${P(q)} = ${c},${p} + ${P(q)} = ${b},所以是 $${XA(p)}${XA(q)}$。` };
+  },
+  diffSqFactor() { // x² - a² = (x+a)(x-a)
+    const a = G.ri(2, 12);
+    return { type: 'multi', answer: [a, a], template: `$x^2 - ${a * a} = (x + $ {} $)(x - $ {} $)$`,
+      text: `用平方差公式因式分解:`,
+      hint: `$${a * a}$ 是哪個數的平方?`,
+      sol: `$${a * a} = ${a}^2$,所以 $x^2 - ${a}^2 = (x+${a})(x-${a})$。` };
+  },
+  roots() { // 解 x² + bx + c = 0
+    const p = nz(-9, 9), q = nz(-9, 9), b = p + q, c = p * q;
+    return { type: 'multi', unordered: true, answer: [-p, -q], template: '$x = $ {} 或 $x = $ {}',
+      text: `解方程式 $x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0$(兩個根先後不拘):`,
+      hint: `先因式分解成 $(x+□)(x+□)=0$:兩數相乘 ${c}、相加 ${b};再讓每個括號等於 0。`,
+      sol: `$${XA(p)}${XA(q)} = 0$,所以 $x = ${-p}$ 或 $x = ${-q}$。` };
+  }
+};
+
 const ex = (html, widget, face) => ({ t: 'explain', html, widget, face });
 const Q = g => ({ t: 'q', gen: g });
 
@@ -386,7 +454,43 @@ window.COURSE = [{
           Q(genE.chase), Q(genE.chase), Q(genE.run)
         ] }
     ] },
-    { id: 'c0s4', title: '④ 乘法公式與因式分解', levels: [] },
+    { id: 'c0s4', title: '④ 乘法公式與因式分解', levels: [
+      { id: 'c0s4l1', icon: '🧩', title: '🧩 分配律與展開', learned: '分配律:每一項都要乘到;$(x+a)(x+b)=x^2+(a+b)x+ab$。',
+        steps: [
+          ex(`兩個括號相乘,要<b>每一項都乘到</b>,這叫<b>分配律</b>(展開)。<br>
+              可以用「面積」來看:長 $x+a$、寬 $x+b$ 的長方形,切成四塊,加起來就是展開式。拖拖看:`, 'areamodel'),
+          Q(genF.expand), Q(genF.expand), Q(genF.expand),
+          ex(`規律很好記:<b>x 項係數 = 兩個數相加,常數項 = 兩個數相乘</b>。(數字是負的也一樣,符號跟著走。)`),
+          Q(genF.expand), Q(genF.expand)
+        ] },
+      { id: 'c0s4l2', icon: '📐', title: '📐 三大乘法公式', learned: '$(a+b)^2=a^2+2ab+b^2$、$(a-b)^2=a^2-2ab+b^2$、$(a+b)(a-b)=a^2-b^2$。',
+        steps: [
+          ex(`三個最常用的公式,背起來很划算:<br>
+              ① $(a+b)^2 = a^2 + 2ab + b^2$<br>② $(a-b)^2 = a^2 - 2ab + b^2$<br>③ $(a+b)(a-b) = a^2 - b^2$(平方差)<br>
+              其實它們都是上一關「展開」的特例。`),
+          Q(genF.square), Q(genF.square), Q(genF.diffSq), Q(genF.diffSq),
+          ex(`公式還能拿來<b>速算</b>:$51^2 = (50+1)^2 = 2500 + 100 + 1 = 2601$;$99\\times101 = (100-1)(100+1) = 10000 - 1 = 9999$。`),
+          Q(genF.sqNum), Q(genF.sqNum), Q(genF.diffSqNum), Q(genF.diffSqNum)
+        ] },
+      { id: 'c0s4l3', icon: '🔍', title: '🔍 因式分解入門', learned: '因式分解是展開的反向:先提公因式;$x^2+bx+c$ 找兩個數,相乘得 c、相加得 b。',
+        steps: [
+          ex(`<b>因式分解 = 展開倒著做</b>:把一個式子寫成「括號 × 括號」。<br>
+              第一招:<b>提公因式</b>。例:$6x + 9 = 3(2x + 3)$,每一項都有因數 3。`),
+          Q(genF.common), Q(genF.common), Q(genF.common),
+          ex(`第二招:$x^2 + bx + c$ 怎麼分?找<b>兩個數:相乘等於 c、相加等於 b</b>。<br>
+              例:$x^2 + 5x + 6$,2×3=6、2+3=5,所以 $=(x+2)(x+3)$。<br>第三招:平方差反過來用,$x^2 - a^2 = (x+a)(x-a)$。`),
+          Q(genF.cross), Q(genF.cross), Q(genF.cross), Q(genF.diffSqFactor)
+        ] },
+      { id: 'c0s4l4', icon: '🎯', title: '🎯 因式分解的妙用', learned: '把方程式分解成「括號 × 括號 = 0」,每個括號等於 0,就得到解。',
+        steps: [
+          ex(`因式分解最大的用處:<b>解方程式</b>。<br>
+              如果 $A \\times B = 0$,那麼 $A=0$ 或 $B=0$。<br>
+              例:$x^2 + 5x + 6 = 0 \\Rightarrow (x+2)(x+3)=0 \\Rightarrow x=-2$ 或 $x=-3$。`),
+          Q(genF.roots), Q(genF.roots), Q(genF.roots),
+          ex(`再練習一下前面學的技巧:展開、公式、因式分解,混著來。`),
+          Q(genF.cross), Q(genF.expand), Q(genF.roots), Q(genF.diffSqNum)
+        ] }
+    ] },
     { id: 'c0s5', title: '⑤ 座標與一次函數', levels: [] }
   ]
 }];

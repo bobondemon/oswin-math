@@ -17,6 +17,26 @@ const Widgets = (() => {
   }
 
   const W = {
+    // 面積模型:(x+a)(x+b) 切成四塊,看展開式怎麼來
+    areamodel(el) {
+      el.innerHTML = `<div class="wd"><div id="am"></div>
+        <div>a:<input type="range" id="a" min="1" max="6" value="3"> <b id="av">3</b>
+          &nbsp; b:<input type="range" id="b" min="1" max="6" value="2"> <b id="bv">2</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const a = el.querySelector('#a'), b = el.querySelector('#b');
+      const draw = () => {
+        const av = +a.value, bv = +b.value, X = 90, u = 22;
+        el.querySelector('#av').textContent = av; el.querySelector('#bv').textContent = bv;
+        const W1 = X + av * u, H1 = X + bv * u;
+        const rect = (x, y, w, h, c, t) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" stroke="currentColor" stroke-width="2"/><text x="${x + w / 2}" y="${y + h / 2 + 5}" text-anchor="middle" font-size="15" fill="#222">${t}</text>`;
+        el.querySelector('#am').innerHTML = `<svg viewBox="0 0 ${W1 + 20} ${H1 + 20}" style="max-width:300px;width:100%">
+          ${rect(10, 10, X, X, '#ffeaa7', 'x²')}${rect(10 + X, 10, av * u, X, '#81ecec', `${av}x`)}
+          ${rect(10, 10 + X, X, bv * u, '#fab1a0', `${bv}x`)}${rect(10 + X, 10 + X, av * u, bv * u, '#dfe6e9', av * bv)}</svg>`;
+        el.querySelector('#ft').innerHTML = tex(`(x+${av})(x+${bv}) = x^2 + ${av + bv}x + ${av * bv}`);
+        Widgets.render(el.querySelector('#ft'));
+      };
+      a.oninput = b.oninput = draw; draw();
+    },
     // 天平:對 ax+b=c 的兩邊同時做相同運算,觀察方程式怎麼變(目標:化成 x=…)
     eqstep(el) {
       const init = { a: 2, b: 3, c: 11 };
