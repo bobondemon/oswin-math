@@ -214,6 +214,71 @@ const gen0 = {
   }
 };
 
+// ---- 一次方程式題目產生器 ----
+// 係數與常數項組成 "ax + b" 的顯示字串(處理 1、-1、0 與正負號)
+const LIN = (a, b) => {
+  const co = a === 1 ? '' : a === -1 ? '-' : String(a);
+  const x = a === 0 ? '' : `${co}x`;
+  const k = b === 0 ? '' : (a === 0 ? String(b) : (b > 0 ? ` + ${b}` : ` - ${-b}`));
+  return (x + k) || '0';
+};
+const genE = {
+  oneStep() {
+    const t = G.pick(['add', 'sub', 'mul']), x = nz(-9, 12);
+    if (t === 'add') { const a = G.ri(2, 15); return { type: 'num', answer: x, text: `解方程式:$x + ${a} = ${x + a}$,x = ?`,
+      hint: `x 被加上了 ${a},要「倒著做」:兩邊同時減 ${a}。`, sol: `兩邊同減 ${a}:$x = ${x + a} - ${a} = ${x}$。` }; }
+    if (t === 'sub') { const a = G.ri(2, 15); return { type: 'num', answer: x, text: `解方程式:$x - ${a} = ${x - a}$,x = ?`,
+      hint: `x 被減了 ${a},要倒著做:兩邊同時加 ${a}。`, sol: `兩邊同加 ${a}:$x = ${x - a} + ${a} = ${x}$。` }; }
+    const a = G.ri(2, 9);
+    return { type: 'num', answer: x, text: `解方程式:$${a}x = ${a * x}$,x = ?`,
+      hint: `x 被乘上了 ${a},要倒著做:兩邊同時除以 ${a}。`, sol: `兩邊同除以 ${a}:$x = ${a * x} \\div ${a} = ${x}$。` };
+  },
+  twoStep() {
+    let a = nz(-9, 9); if (Math.abs(a) < 2) a = a < 0 ? -2 : 2;
+    const x = nz(-9, 9), b = nz(-12, 12), c = a * x + b;
+    return { type: 'num', answer: x, text: `解方程式:$${LIN(a, b)} = ${c}$,x = ?`,
+      hint: `先把常數項 ${b} 移到右邊(倒著做),再把係數 ${a} 除掉。`,
+      sol: `兩邊${b > 0 ? '減' : '加'} ${Math.abs(b)}:$${a}x = ${c - b}$;兩邊同除以 ${a}:$x = ${x}$。` };
+  },
+  fracEq() {
+    const a = G.ri(2, 6), x = a * nz(-6, 6), b = nz(-9, 9), c = x / a + b;
+    return { type: 'num', answer: x, text: `解方程式:$\\frac{x}{${a}} ${b > 0 ? '+' : '-'} ${Math.abs(b)} = ${c}$,x = ?`,
+      hint: `先把 ${b > 0 ? '+' : '-'} ${Math.abs(b)} 移到右邊,再兩邊同乘以 ${a}。`,
+      sol: `$\\frac{x}{${a}} = ${c - b}$,兩邊同乘 ${a}:$x = ${x}$。` };
+  },
+  bothSides() {
+    let a, c; do { a = G.ri(1, 9); c = G.ri(1, 9); } while (a === c);
+    const x = nz(-9, 9), b = nz(-10, 10), d = (a - c) * x + b;
+    return { type: 'num', answer: x, text: `解方程式:$${LIN(a, b)} = ${LIN(c, d)}$,x = ?`,
+      hint: '把有 x 的項移到同一邊、常數移到另一邊,<b>移過等號要變號</b>。',
+      sol: `移項:$${a - c}x = ${d - b}$(x 的項移到左邊、常數移到右邊),兩邊同除 ${a - c}:$x = ${x}$。` };
+  },
+  paren() {
+    const a = G.ri(2, 6), x = nz(-9, 9), b = nz(-8, 8), c = a * (x + b);
+    return { type: 'num', answer: x, text: `解方程式:$${a}(x ${b > 0 ? '+' : '-'} ${Math.abs(b)}) = ${c}$,x = ?`,
+      hint: `可以先兩邊同除以 ${a},再解 $x ${b > 0 ? '+' : '-'} ${Math.abs(b)} = ${c / a}$;或先把括號展開。`,
+      sol: `兩邊同除 ${a}:$x ${b > 0 ? '+' : '-'} ${Math.abs(b)} = ${c / a}$,所以 $x = ${x}$。` };
+  },
+  shop() {
+    const p = G.pick([30, 40, 50, 60, 80]), n = G.ri(2, 5), fee = G.pick([10, 20, 30]);
+    return { type: 'num', answer: p, text: `買 ${n} 片披薩再加外送費 ${fee} 元,一共付 ${n * p + fee} 元。每片披薩幾元?`,
+      hint: `設每片 x 元,列方程式:$${n}x + ${fee} = ${n * p + fee}$。`,
+      sol: `$${n}x + ${fee} = ${n * p + fee}$,$${n}x = ${n * p}$,$x = ${p}$。` };
+  },
+  run() {
+    const a = G.ri(2, 9) * 10, b = G.pick([100, 150, 200, 250, 300]), t = G.ri(3, 12), c = b + a * t;
+    return { type: 'num', answer: t, text: `逃獄犯安十郎已經逃了 ${b} 公尺,之後每分鐘再逃 ${a} 公尺。幾分鐘後他總共逃了 ${c} 公尺?`,
+      hint: `設 x 分鐘後,列式:$${b} + ${a}x = ${c}$。`,
+      sol: `$${b} + ${a}x = ${c}$,$${a}x = ${c - b}$,$x = ${t}$ 分鐘。` };
+  },
+  chase() {
+    const v1 = G.ri(4, 8) * 10, k = G.ri(1, 4) * 10, t = G.ri(3, 10), d = k * t, v2 = v1 + k;
+    return { type: 'num', answer: t, text: `安十郎先跑了 ${d} 公尺,每分鐘跑 ${v1} 公尺;仗助從原點出發追,每分鐘跑 ${v2} 公尺。幾分鐘後仗助追上他?`,
+      hint: `設 x 分鐘追上:仗助跑的距離 = 安十郎跑的距離,即 $${v2}x = ${v1}x + ${d}$。`,
+      sol: `$${v2}x = ${v1}x + ${d}$,移項 $${k}x = ${d}$,$x = ${t}$ 分鐘。` };
+  }
+};
+
 const ex = (html, widget, face) => ({ t: 'explain', html, widget, face });
 const Q = g => ({ t: 'q', gen: g });
 
@@ -288,7 +353,39 @@ window.COURSE = [{
           Q(gen0.floorStory), Q(gen0.floorStory), Q(gen0.scoreStory)
         ] }
     ] },
-    { id: 'c0s3', title: '③ 一次方程式', levels: [] },
+    { id: 'c0s3', title: '③ 一次方程式', levels: [
+      { id: 'c0s3l1', icon: '⚖️', title: '⚖️ 天平與等量公理', learned: '方程式像一個天平:兩邊同時做相同的運算,等號就不會變;解方程式就是「倒著做」把 x 單獨留下來。',
+        steps: [
+          ex(`方程式就像一個<b>天平</b>:左邊等於右邊。只要<b>兩邊同時做一樣的事</b>(同加、同減、同乘、同除),天平就不會歪。<br>
+              例:$2x + 3 = 11$。目標是把它變成「$x = $ 某數」。試試看按按鈕,看看怎麼一步步解出來:`, 'eqstep'),
+          Q(genE.oneStep), Q(genE.oneStep),
+          ex(`解方程式的口訣:<b>x 被怎麼對待,就「倒著做」</b>。被加就減、被減就加、被乘就除、被除就乘。`),
+          Q(genE.oneStep), Q(genE.oneStep), Q(genE.oneStep)
+        ] },
+      { id: 'c0s3l2', icon: '🔧', title: '🔧 兩步驟方程式', learned: '先把常數項移走(倒著做),再處理 x 的係數;答案可以代回原式檢查。',
+        steps: [
+          ex(`$2x + 3 = 11$ 有兩步驟:x 先被乘 2,再被加 3。倒著做就是<b>先減 3、再除以 2</b>:<br>
+              $2x = 8 \\Rightarrow x = 4$。<br>答案可以<b>代回去檢查</b>:$2\\times4+3 = 11$ ✓`),
+          Q(genE.twoStep), Q(genE.twoStep), Q(genE.twoStep),
+          ex(`有分數的也一樣:例 $\\frac{x}{3} + 1 = 5$ → 先減 1 得 $\\frac{x}{3} = 4$,再<b>兩邊同乘 3</b>,得 $x = 12$。`),
+          Q(genE.fracEq), Q(genE.fracEq)
+        ] },
+      { id: 'c0s3l3', icon: '🌉', title: '🌉 移項與括號', learned: '移項:把項搬過等號要變號;有括號可以先除以括號外的數,或先展開。',
+        steps: [
+          ex(`方程式兩邊都有 x 時,要把 x 都集中到同一邊:<b>把一項搬過等號,正負號要變</b>(這叫<b>移項</b>)。<br>
+              例:$3x + 2 = x + 10$ → $3x - x = 10 - 2$ → $2x = 8$ → $x = 4$。`),
+          Q(genE.bothSides), Q(genE.bothSides), Q(genE.bothSides),
+          ex(`遇到括號,有兩種做法:<br>① 先把括號外的數除過去:$2(x+3)=10 \\Rightarrow x+3=5$。<br>② 先展開括號:$2x + 6 = 10$。兩種都會得到 $x = 2$。`),
+          Q(genE.paren), Q(genE.paren)
+        ] },
+      { id: 'c0s3l4', icon: '🏃', title: '🏃 列方程式解應用題', learned: '應用題的步驟:設未知數 x → 找出等量關係 → 列方程式 → 解出 → 檢查。',
+        steps: [
+          ex(`應用題的步驟:<br>① <b>設</b>:把要找的東西設成 $x$。<br>② <b>找等量關係</b>(誰等於誰)。<br>③ <b>列方程式</b>。<br>④ <b>解</b>。<br>⑤ <b>檢查</b>答案合不合理。`),
+          Q(genE.shop), Q(genE.shop), Q(genE.run),
+          ex(`<b>追趕問題</b>很常見:追的人跑的距離 = 對方先跑的距離 + 對方之後跑的距離。把時間設成 $x$,兩邊列出來就是方程式。`),
+          Q(genE.chase), Q(genE.chase), Q(genE.run)
+        ] }
+    ] },
     { id: 'c0s4', title: '④ 乘法公式與因式分解', levels: [] },
     { id: 'c0s5', title: '⑤ 座標與一次函數', levels: [] }
   ]

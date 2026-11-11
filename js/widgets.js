@@ -17,6 +17,39 @@ const Widgets = (() => {
   }
 
   const W = {
+    // 天平:對 ax+b=c 的兩邊同時做相同運算,觀察方程式怎麼變(目標:化成 x=…)
+    eqstep(el) {
+      const init = { a: 2, b: 3, c: 11 };
+      let s = { ...init }, hist = [];
+      const fmt = n => String(Math.round(n * 100) / 100);
+      const side = t => {
+        const co = t.a === 1 ? '' : t.a === -1 ? '-' : fmt(t.a);
+        const x = t.a === 0 ? '' : `${co}x`;
+        const b = t.b === 0 ? '' : (t.a === 0 ? fmt(t.b) : (t.b > 0 ? ` + ${fmt(t.b)}` : ` - ${fmt(-t.b)}`));
+        return (x + b) || '0';
+      };
+      const eq = t => `${side(t)} = ${fmt(t.c)}`;
+      const apply = (kind, k) => {
+        if (kind === `兩邊 +${k}`) { s.b += k; s.c += k; }
+        else if (kind === `兩邊 −${k}`) { s.b -= k; s.c -= k; }
+        else if (kind === `兩邊 ×${k}`) { s.a *= k; s.b *= k; s.c *= k; }
+        else if (kind === `兩邊 ÷${k}`) { s.a /= k; s.b /= k; s.c /= k; }
+        hist.push(`${kind} → ${eq(s)}`);
+        draw();
+      };
+      const ops = [['兩邊 −3', 3], ['兩邊 +3', 3], ['兩邊 ÷2', 2], ['兩邊 ×2', 2]];
+      const draw = () => {
+        const solved = s.a === 1 && s.b === 0;
+        el.innerHTML = `<div class="wd"><div class="big">${tex(eq(s))}</div>
+          ${solved ? `<div class="fb ok">🎉 解出來了:x = ${fmt(s.c)}</div>` : '<div style="color:var(--mut)">目標:把方程式變成「x = 某數」</div>'}
+          <div class="row" style="justify-content:center">${ops.map(([k]) => `<button class="btn sec op" data-k="${k}">${k}</button>`).join('')}<button class="btn sec" id="rs">↺ 重來</button></div>
+          <div style="margin-top:8px;font-size:14px;color:var(--mut);text-align:left;max-width:360px;margin-inline:auto">${hist.map(h => '• ' + h).join('<br>')}</div></div>`;
+        el.querySelectorAll('.op').forEach((b, i) => b.onclick = () => apply(b.dataset.k, ops[i][1]));
+        el.querySelector('#rs').onclick = () => { s = { ...init }; hist = []; draw(); };
+        Widgets.render(el);
+      };
+      draw();
+    },
     // 數線:拖曳看數字的位置、與 0 的距離
     numline(el) {
       el.innerHTML = `<div class="wd"><div id="nl"></div>
