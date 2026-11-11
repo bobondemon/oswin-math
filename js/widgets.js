@@ -17,6 +17,56 @@ const Widgets = (() => {
   }
 
   const W = {
+    // 座標平面:拖曳 x、y,看點的位置與象限
+    coordpt(el) {
+      el.innerHTML = `<div class="wd"><div id="pl"></div>
+        <div>x:<input type="range" id="x" min="-6" max="6" value="3"> <b id="xv">3</b>
+          &nbsp; y:<input type="range" id="y" min="-6" max="6" value="2"> <b id="yv">2</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const x = el.querySelector('#x'), y = el.querySelector('#y');
+      const draw = () => {
+        const xv = +x.value, yv = +y.value;
+        el.querySelector('#xv').textContent = xv; el.querySelector('#yv').textContent = yv;
+        el.querySelector('#pl').innerHTML = G.plane({ pts: [{ x: xv, y: yv, label: `(${xv}, ${yv})` }] });
+        const q = xv === 0 || yv === 0 ? '在座標軸上' : xv > 0 && yv > 0 ? '第一象限' : xv < 0 && yv > 0 ? '第二象限' : xv < 0 && yv < 0 ? '第三象限' : '第四象限';
+        el.querySelector('#ft').innerHTML = `點 (${xv}, ${yv}):<b>${q}</b>`;
+      };
+      x.oninput = y.oninput = draw; draw();
+    },
+    // 函數機器:輸入 x,輸出 f(x)=mx+b
+    funcmachine(el) {
+      el.innerHTML = `<div class="wd">
+        <div>m:<input type="range" id="m" min="-5" max="5" value="2"> <b id="mv">2</b>
+          &nbsp; b:<input type="range" id="b" min="-9" max="9" value="1"> <b id="bv">1</b></div>
+        <div>輸入 x:<input type="range" id="x" min="-6" max="6" value="3"> <b id="xv">3</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const m = el.querySelector('#m'), b = el.querySelector('#b'), x = el.querySelector('#x');
+      const draw = () => {
+        const mv = +m.value, bv = +b.value, xv = +x.value, r = mv * xv + bv;
+        el.querySelector('#mv').textContent = mv; el.querySelector('#bv').textContent = bv; el.querySelector('#xv').textContent = xv;
+        const f = `${mv === 1 ? '' : mv === -1 ? '-' : mv}x${bv === 0 ? '' : bv > 0 ? ' + ' + bv : ' - ' + (-bv)}`;
+        el.querySelector('#ft').innerHTML = tex(`f(x) = ${f}`) + '<br>' + tex(`f(${xv}) = ${mv}\\times${xv < 0 ? '(' + xv + ')' : xv}${bv < 0 ? '-' + (-bv) : '+' + bv} = ${r}`);
+        Widgets.render(el.querySelector('#ft'));
+      };
+      m.oninput = b.oninput = x.oninput = draw; draw();
+    },
+    // 直線圖形:拖曳斜率 m 與截距 b
+    linegraph(el) {
+      el.innerHTML = `<div class="wd"><div id="pl"></div>
+        <div>斜率 m:<input type="range" id="m" min="-3" max="3" value="1"> <b id="mv">1</b>
+          &nbsp; 截距 b:<input type="range" id="b" min="-5" max="5" value="2"> <b id="bv">2</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const m = el.querySelector('#m'), b = el.querySelector('#b');
+      const draw = () => {
+        const mv = +m.value, bv = +b.value;
+        el.querySelector('#mv').textContent = mv; el.querySelector('#bv').textContent = bv;
+        el.querySelector('#pl').innerHTML = G.plane({ line: { m: mv, b: bv }, pts: [{ x: 0, y: bv, label: `(0, ${bv})` }] });
+        const f = `${mv === 0 ? '' : (mv === 1 ? '' : mv === -1 ? '-' : mv) + 'x'}${bv === 0 ? (mv === 0 ? '0' : '') : mv === 0 ? bv : bv > 0 ? ' + ' + bv : ' - ' + (-bv)}`;
+        el.querySelector('#ft').innerHTML = tex(`y = ${f}`) + `<div style="font-size:15px;color:var(--mut)">每往右 1 格,${mv > 0 ? '上升 ' + mv : mv < 0 ? '下降 ' + (-mv) : '高度不變'} 格;與 y 軸交在 (0, ${bv})</div>`;
+        Widgets.render(el.querySelector('#ft'));
+      };
+      m.oninput = b.oninput = draw; draw();
+    },
     // 面積模型:(x+a)(x+b) 切成四塊,看展開式怎麼來
     areamodel(el) {
       el.innerHTML = `<div class="wd"><div id="am"></div>

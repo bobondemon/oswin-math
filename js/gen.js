@@ -39,3 +39,32 @@ const G = {
     return 'ok';
   }
 };
+
+// 座標平面 SVG:G.plane({pts:[{x,y,label}], line:{m,b}, range:6, size:260}) → HTML 字串
+// (供題目文字與互動小元件共用;出現在題目裡時,學生要從圖上讀座標或斜率)
+G._pid = 0;
+G.plane = function (o) {
+  o = o || {};
+  const R = o.range || 6, S = o.size || 320, pad = 16, u = (S - 2 * pad) / (2 * R), C = S / 2;
+  const X = x => C + x * u, Y = y => C - y * u, id = 'pl' + (G._pid++);
+  let s = `<svg viewBox="0 0 ${S} ${S}" style="max-width:${S}px;width:100%;display:block;margin:6px auto" role="img" aria-label="座標平面">`;
+  s += `<defs><clipPath id="${id}"><rect x="${X(-R)}" y="${Y(R)}" width="${2 * R * u}" height="${2 * R * u}"/></clipPath></defs>`;
+  for (let i = -R; i <= R; i++) {
+    s += `<line x1="${X(i)}" y1="${Y(-R)}" x2="${X(i)}" y2="${Y(R)}" stroke="currentColor" stroke-opacity="${i === 0 ? 0.9 : 0.18}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+    s += `<line x1="${X(-R)}" y1="${Y(i)}" x2="${X(R)}" y2="${Y(i)}" stroke="currentColor" stroke-opacity="${i === 0 ? 0.9 : 0.18}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+    if (i !== 0 && i % 2 === 0) {
+      s += `<text x="${X(i)}" y="${Y(0) + 13}" text-anchor="middle" font-size="10" fill="currentColor">${i}</text>`;
+      s += `<text x="${X(0) - 4}" y="${Y(i) + 3}" text-anchor="end" font-size="10" fill="currentColor">${i}</text>`;
+    }
+  }
+  s += `<text x="${X(R) - 2}" y="${Y(0) - 5}" text-anchor="end" font-size="11" fill="currentColor">x</text><text x="${X(0) + 6}" y="${Y(R) + 10}" font-size="11" fill="currentColor">y</text>`;
+  if (o.line) {
+    const m = o.line.m, b = o.line.b;
+    s += `<line clip-path="url(#${id})" x1="${X(-R)}" y1="${Y(m * -R + b)}" x2="${X(R)}" y2="${Y(m * R + b)}" stroke="#6c5ce7" stroke-width="3"/>`;
+  }
+  (o.pts || []).forEach(p => {
+    s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="#e17055"/>`;
+    if (p.label) s += `<text x="${X(p.x) + 8}" y="${Y(p.y) - 8}" font-size="13" font-weight="700" fill="currentColor">${p.label}</text>`;
+  });
+  return s + '</svg>';
+};

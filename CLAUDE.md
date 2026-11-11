@@ -59,7 +59,7 @@ index.html          單頁應用外殼(頂端:存檔/讀檔/劇情回顧;頁尾:
 css/style.css       樣式(深色模式、手機版面、劇情卡)
 js/store.js         進度存檔(localStorage 'mathquest-v1':done / wrong / resume)、金手指唯讀模式
 js/gen.js           題目產生器共用工具(隨機、gcd、答案解析與檢查 G.check)
-js/widgets.js       互動小元件 Widgets.mount(name, el)(目前 fracbar、fracequiv、numline、numwalk、eqstep、areamodel)
+js/widgets.js       互動小元件 Widgets.mount(name, el)(目前 fracbar、fracequiv、numline、numwalk、eqstep、areamodel、coordpt、funcmachine、linegraph)。`G.plane({pts, line})`(在 `js/gen.js`)可產生座標平面 SVG,題目文字與小元件都能用
 js/story.js         劇情畫面邏輯(每過一關解鎖一張;渲染劇情卡)
 js/engine.js        關卡引擎:講解 → 題目 → 提示 → 過關(完成時觸發劇情)
 js/app.js           地圖、路由(#/、#/play/<levelId>@<step>、#/story)、存讀檔、金手指
@@ -99,7 +99,7 @@ docs/               調查與設計檔(見上)
 
 ## 目前進度與待決事項
 
-- 已完成:骨架(引擎、地圖、存讀檔、金手指、劇情畫面與劇情回顧)、序章「分數與小數」「正負數運算」「一次方程式」「乘法公式與因式分解」各 4 關與各 4 張劇情畫面(`c0s1l1~4`、`c0s2l1~4`、`c0s3l1~4` 已有圖;`c0s4l1~4` 文字已寫、圖待補,暫用 emoji 佔位)、三份調查/設計檔。
+- 已完成:骨架(引擎、地圖、存讀檔、金手指、劇情畫面與劇情回顧)、序章「分數與小數」「正負數運算」「一次方程式」「乘法公式與因式分解」「座標與一次函數」各 4 關與各 4 張劇情畫面(`c0s1l1~4`~`c0s4l1~4` 已有圖;`c0s5l1~4` 文字已寫、圖待補,暫用 emoji 佔位);序章 Boss 關 `c0boss` 尚未做、三份調查/設計檔。
 - 下一步:序章其餘子主題與其劇情 → 第 1 章「數與式」(MVP)→ 依孩子學校進度擴充。
 - 待決:
   1. **孩子學校的課本出版社與進度**(章序要不要調整,見 docs/01 第 8 節)。

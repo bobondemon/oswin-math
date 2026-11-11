@@ -347,6 +347,98 @@ const genF = {
   }
 };
 
+// ---- 座標與一次函數題目產生器 ----
+const QUAD = ['第一象限', '第二象限', '第三象限', '第四象限'];
+const quadOf = (x, y) => (x > 0 && y > 0 ? 0 : x < 0 && y > 0 ? 1 : x < 0 && y < 0 ? 2 : 3);
+const FN = (m, b) => `f(x) = ${LIN(m, b)}`;
+const genG = {
+  readPoint() {
+    const x = nz(-5, 5), y = nz(-5, 5);
+    return { type: 'multi', answer: [x, y], template: '$P = ($ {} $,$ {} $)$',
+      text: `${G.plane({ pts: [{ x, y, label: 'P' }] })}<div>寫出點 P 的座標(先 x、後 y):</div>`,
+      hint: '先看點在 y 軸的左邊(負)還是右邊(正)、離 y 軸幾格,這是 x;再看在 x 軸上方或下方幾格,這是 y。',
+      sol: `P 的橫向位置是 ${x}、縱向位置是 ${y},所以 $P = (${x}, ${y})$。` };
+  },
+  quadrant() {
+    const x = nz(-9, 9), y = nz(-9, 9), a = quadOf(x, y);
+    return { type: 'choice', choices: QUAD, answer: a, text: `點 $(${x}, ${y})$ 在哪一個象限?`,
+      hint: '第一象限(+,+)、第二象限(−,+)、第三象限(−,−)、第四象限(+,−)。',
+      sol: `x ${x > 0 ? '為正' : '為負'}、y ${y > 0 ? '為正' : '為負'},所以在${QUAD[a]}。` };
+  },
+  axisDist() {
+    const x = nz(-9, 9), y = nz(-9, 9), toX = Math.random() < 0.5;
+    return { type: 'num', answer: Math.abs(toX ? y : x), text: `點 $(${x}, ${y})$ 到 ${toX ? 'x' : 'y'} 軸的距離是多少?`,
+      hint: toX ? '到 x 軸的距離只看 y 座標,距離不會是負的。' : '到 y 軸的距離只看 x 座標,距離不會是負的。',
+      sol: `到 ${toX ? 'x' : 'y'} 軸的距離 = ${toX ? 'y' : 'x'} 座標的絕對值 = ${Math.abs(toX ? y : x)}。` };
+  },
+  evalF() {
+    const m = nz(-5, 5), b = nz(-9, 9), x = nz(-6, 6);
+    return { type: 'num', answer: m * x + b, text: `$${FN(m, b)}$,求 $f(${x})$ 的值。`,
+      hint: `把 x 換成 ${P(x)} 代進去算。`,
+      sol: `$f(${x}) = ${P(m)} \\times ${P(x)} + ${P(b)} = ${m * x + b}$。` };
+  },
+  solveF() {
+    const m = nz(-5, 5), b = nz(-9, 9), x = nz(-6, 6), y = m * x + b;
+    return { type: 'num', answer: x, text: `$${FN(m, b)}$,若 $f(x) = ${y}$,則 x = ?`,
+      hint: `列方程式 $${LIN(m, b)} = ${y}$,用上一個主題學的方法解。`,
+      sol: `$${LIN(m, b)} = ${y}$,$${m}x = ${y - b}$,$x = ${x}$。` };
+  },
+  table() {
+    const m = nz(-4, 4), b = nz(-6, 6);
+    return { type: 'multi', answer: [m + b, 2 * m + b, 3 * m + b], template: '$f(1) = $ {} $,\\ f(2) = $ {} $,\\ f(3) = $ {}',
+      text: `$${FN(m, b)}$,填表:`,
+      hint: '依序把 x = 1、2、3 代進去。注意每次 x 加 1,答案會固定增加(或減少)一個數。',
+      sol: `$f(1) = ${m + b}$,$f(2) = ${2 * m + b}$,$f(3) = ${3 * m + b}$(每次增加 ${m})。` };
+  },
+  readLine() {
+    const m = nz(-3, 3), b = G.ri(-4, 4);
+    return { type: 'multi', answer: [m, b], template: '$y = $ {} $x + $ {}',
+      text: `${G.plane({ line: { m, b } })}<div>寫出這條直線的方程式 $y = mx + b$(填 m 與 b,可為負數):</div>`,
+      hint: 'b:直線和 y 軸相交的高度。m:從交點每往右走 1 格,上升(正)或下降(負)幾格。',
+      sol: `與 y 軸交在 (0, ${b}),所以 b = ${b};每往右 1 格${m > 0 ? '上升' : '下降'} ${Math.abs(m)} 格,所以 m = ${m}。` };
+  },
+  passPt() {
+    const m = nz(-5, 5), b = nz(-9, 9), x0 = nz(-5, 5), y0 = m * x0 + b;
+    return { type: 'num', answer: b, text: `直線 $y = ${m}x + b$ 通過點 $(${x0}, ${y0})$,求 b。`,
+      hint: '點在直線上,代進去一定成立:把 x、y 代入求 b。',
+      sol: `$${y0} = ${P(m)} \\times ${P(x0)} + b$,$b = ${y0} - ${P(m * x0)} = ${b}$。` };
+  },
+  parallel() {
+    const m = nz(-4, 4); let m2, m3;
+    do { m2 = nz(-4, 4); } while (m2 === m);
+    do { m3 = nz(-4, 4); } while (m3 === m || m3 === m2);
+    const k = G.ri(-5, 5), opts = [[m, G.ri(-5, 5)], [m2, G.ri(-5, 5)], [m3, G.ri(-5, 5)]];
+    if (opts[0][1] === k) opts[0][1] = k + 1;
+    const order = [0, 1, 2].sort(() => Math.random() - 0.5);
+    return { type: 'choice', choices: order.map(i => `$y = ${LIN(opts[i][0], opts[i][1])}$`), answer: order.indexOf(0),
+      text: `哪一條直線和 $y = ${LIN(m, k)}$ <b>平行</b>?`,
+      hint: '平行線的斜率(x 前面的係數)相同。',
+      sol: `平行線斜率相同,都是 ${m},所以選 $y = ${LIN(opts[0][0], opts[0][1])}$。` };
+  },
+  twoPoints() {
+    const m = nz(-4, 4), b = G.ri(-6, 6), x1 = G.ri(-4, 0), x2 = x1 + G.ri(1, 4), y1 = m * x1 + b, y2 = m * x2 + b;
+    return { type: 'multi', answer: [m, b], template: '$y = $ {} $x + $ {}',
+      text: `一條直線通過 $(${x1}, ${y1})$ 和 $(${x2}, ${y2})$,求方程式 $y = mx + b$:`,
+      hint: `先算斜率 m = (y 的變化)÷(x 的變化);再把一個點代入求 b。`,
+      sol: `$m = \\frac{${y2} - ${P(y1)}}{${x2} - ${P(x1)}} = ${m}$;代入 $(${x1}, ${y1})$:$b = ${y1} - ${P(m)}\\times${P(x1)} = ${b}$。` };
+  },
+  intersect() {
+    let a, c; do { a = nz(-4, 4); c = nz(-4, 4); } while (a === c);
+    const x = nz(-5, 5), y = G.ri(-8, 8), b = y - a * x, d = y - c * x;
+    return { type: 'multi', answer: [x, y], template: '交點 $= ($ {} $,$ {} $)$',
+      text: `兩條直線 $y = ${LIN(a, b)}$ 與 $y = ${LIN(c, d)}$ 相交,求交點座標:`,
+      hint: '交點的 y 相同:令 $' + LIN(a, b) + ' = ' + LIN(c, d) + '$ 先解出 x,再代回求 y。',
+      sol: `$${LIN(a, b)} = ${LIN(c, d)}$ → $${a - c}x = ${d - b}$ → $x = ${x}$;代入得 $y = ${y}$。` };
+  },
+  taxi() {
+    const b = G.pick([60, 70, 80, 100]), m = G.pick([15, 20, 25, 30]), x = G.ri(3, 12), tot = b + m * x;
+    if (Math.random() < 0.5) return { type: 'num', answer: tot, text: `計程車起跳價 ${b} 元,之後每公里 ${m} 元。搭 ${x} 公里要付多少元?`,
+      hint: `費用 y 與公里數 x 的關係是 $y = ${m}x + ${b}$。`, sol: `$y = ${m} \\times ${x} + ${b} = ${tot}$ 元。` };
+    return { type: 'num', answer: x, text: `計程車起跳價 ${b} 元,之後每公里 ${m} 元。付了 ${tot} 元,搭了幾公里?`,
+      hint: `列方程式 $${m}x + ${b} = ${tot}$,解出 x。`, sol: `$${m}x = ${tot - b}$,$x = ${x}$ 公里。` };
+  }
+};
+
 const ex = (html, widget, face) => ({ t: 'explain', html, widget, face });
 const Q = g => ({ t: 'q', gen: g });
 
@@ -491,6 +583,42 @@ window.COURSE = [{
           Q(genF.cross), Q(genF.expand), Q(genF.roots), Q(genF.diffSqNum)
         ] }
     ] },
-    { id: 'c0s5', title: '⑤ 座標與一次函數', levels: [] }
+    { id: 'c0s5', title: '⑤ 座標與一次函數', levels: [
+      { id: 'c0s5l1', icon: '📍', title: '📍 座標平面', learned: '點用 (x, y) 表示:先橫向 x、再縱向 y;座標平面被兩軸分成四個象限。',
+        steps: [
+          ex(`座標平面有兩條數線:橫的<b>x 軸</b>、直的<b>y 軸</b>,交在原點 $(0,0)$。<br>
+              一個點用 $(x, y)$ 表示:<b>先橫向、再縱向</b>。兩軸把平面分成四個<b>象限</b>。拖拖看:`, 'coordpt'),
+          Q(genG.readPoint), Q(genG.readPoint),
+          ex(`象限的符號規律:第一象限 $(+,+)$、第二象限 $(-,+)$、第三象限 $(-,-)$、第四象限 $(+,-)$。<br>
+              點到 x 軸的距離看 <b>y 座標</b>的絕對值,到 y 軸的距離看 <b>x 座標</b>的絕對值。`),
+          Q(genG.quadrant), Q(genG.quadrant), Q(genG.axisDist), Q(genG.axisDist)
+        ] },
+      { id: 'c0s5l2', icon: '🎛️', title: '🎛️ 函數機器', learned: '函數 f(x) 就是一台機器:輸入 x,按規則算出唯一的輸出;一次函數 f(x)=mx+b。',
+        steps: [
+          ex(`<b>函數</b>像一台機器:丟進去一個 $x$,按照規則,吐出<b>唯一</b>的一個結果 $f(x)$。<br>
+              <b>一次函數</b>的規則是 $f(x) = mx + b$(m 和 b 是固定的數)。調調看:`, 'funcmachine'),
+          Q(genG.evalF), Q(genG.evalF), Q(genG.table),
+          ex(`反過來也可以問:輸出是 $y$,輸入的 $x$ 是多少?這就是解方程式 $mx + b = y$。`),
+          Q(genG.solveF), Q(genG.solveF), Q(genG.table)
+        ] },
+      { id: 'c0s5l3', icon: '📈', title: '📈 一次函數的圖形', learned: '一次函數的圖形是直線:斜率 m 是每往右 1 格上升的量,截距 b 是與 y 軸交點的高度;斜率相同的直線互相平行。',
+        steps: [
+          ex(`把每個 $x$ 對應的 $(x, f(x))$ 點出來,連起來就是一條<b>直線</b>。<br>
+              <b>斜率 m</b>:每往右走 1 格,上升(正)或下降(負)幾格。<b>截距 b</b>:直線和 y 軸相交的高度。拖拖看:`, 'linegraph'),
+          Q(genG.readLine), Q(genG.readLine), Q(genG.passPt),
+          ex(`斜率相同的兩條直線<b>互相平行</b>(永遠不會相交)。`),
+          Q(genG.parallel), Q(genG.parallel), Q(genG.readLine)
+        ] },
+      { id: 'c0s5l4', icon: '🔗', title: '🔗 求直線與應用', learned: '兩點可決定一條直線:先求斜率再求截距;兩直線的交點滿足兩個方程式。',
+        steps: [
+          ex(`已知直線經過兩點,怎麼求 $y = mx + b$?<br>
+              ① 斜率 $m$ = (y 的變化量)÷(x 的變化量)。 ② 把其中一點代進去,解出 $b$。<br>
+              例:過 $(0,1)$ 與 $(2,5)$:$m = \\frac{5-1}{2-0} = 2$,代入得 $b = 1$,所以 $y = 2x + 1$。`),
+          Q(genG.twoPoints), Q(genG.twoPoints), Q(genG.twoPoints),
+          ex(`<b>兩條直線的交點</b>:交點同時在兩條直線上,所以兩個式子的 y 相等 —— 令右邊相等,解出 x,再代回求 y。<br>
+              生活中的收費(起跳價 + 每公里費用)就是一次函數!`),
+          Q(genG.intersect), Q(genG.intersect), Q(genG.taxi), Q(genG.taxi)
+        ] }
+    ] }
   ]
 }];
