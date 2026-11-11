@@ -104,6 +104,7 @@ const Engine = (() => {
     function finish() {
       Store.markDone(level.id);
       Store.setResume(null);
+      if (window.refreshStats) refreshStats(); // 更新頁首的「劇情回顧 (n)」數字
       // 每過一關就推進一張劇情畫面(有寫劇情的關卡才有)
       const showBeat = !!Story.beatOf(level);
       view().innerHTML = `<div class="card pop" style="text-align:center">
