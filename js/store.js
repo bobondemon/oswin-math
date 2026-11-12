@@ -27,6 +27,8 @@ const Store = (() => {
     addWrong(w) { if (gold) return; s.wrong.push(w); s.wrong = s.wrong.slice(-100); save(); },
     exportJSON: () => JSON.stringify({ done: s.done, wrong: s.wrong, resume: s.resume || null }),
     importJSON(t) { if (gold) return; s = Object.assign(fresh(), JSON.parse(t)); if (s.stars) { Object.keys(s.stars).forEach(k => { if (s.stars[k]) s.done[k] = 1; }); } save(); },
+    // 家長指定進度:只有「完成的關卡」被覆寫(僅金手指面板呼叫,會寫入孩子這台瀏覽器的存檔)
+    setDoneIds(ids) { s.done = {}; ids.forEach(id => { s.done[id] = 1; }); s.resume = null; save(); },
     // 清除孩子的全部進度(金手指模式下由家長按鈕觸發)
     reset() { try { localStorage.removeItem(KEY); } catch (e) {} s = fresh(); }
   };

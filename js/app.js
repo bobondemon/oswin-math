@@ -39,7 +39,11 @@ function renderMap() {
     每過一關,就會多一張畫面,推進<b>荒謬又離譜的劇情</b>!</div></div>`;
   if (Store.gold()) html = `<div class="fb hint">🔑 <b>金手指模式</b>:所有關卡已開放,可自由瀏覽。此模式下的作答<b>不會</b>記錄到孩子的進度。
     <button class="btn sec" id="goldoff" style="margin-left:8px;padding:4px 12px;font-size:14px">關閉</button>
-    <button class="btn sec" id="goldreset" style="margin-left:8px;padding:4px 12px;font-size:14px">🗑 清除孩子進度</button></div>` + html;
+    <button class="btn sec" id="goldreset" style="margin-left:8px;padding:4px 12px;font-size:14px">🗑 清除孩子進度</button>
+    <div style="margin-top:10px">📌 <b>設定孩子進度</b>(例如存檔遺失時):選一關,把它<b>之前</b>的關卡全部標為已完成,這一關起從頭玩。<br>
+    <select id="gsetsel" style="margin:6px 0;max-width:100%;padding:6px">${COURSE_DATA.map(c => c.subtopics.map(s => s.levels.map(l =>
+      `<option value="${l.id}">${esc(c.title)} ‧ ${esc(s.title)} ‧ ${esc(l.title)}</option>`).join('')).join('')).join('')}</select>
+    <button class="btn sec" id="gsetgo" style="margin-left:8px;padding:4px 12px;font-size:14px">套用到這台瀏覽器</button></div></div>` + html;
   const r = Store.resume(), rl = r && list.find(l => l.id === r.id);
   if (rl) html += `<div class="card"><b>📍 上次玩到:${esc(rl.title)}(第 ${r.i + 1}/${rl.steps.length} 步)</b>
     <div class="row"><button class="btn" id="resume">繼續上次進度 ➜</button></div></div>`;
@@ -64,6 +68,15 @@ function renderMap() {
   const gr = document.getElementById('goldreset');
   if (gr) gr.onclick = () => {
     if (confirm('確定要清除這台瀏覽器上孩子的全部進度(已完成的關卡與劇情)嗎?此動作無法復原。')) { Store.reset(); location.reload(); }
+  };
+  const gset = document.getElementById('gsetgo');
+  if (gset) gset.onclick = () => {
+    const id = document.getElementById('gsetsel').value, idx = list.findIndex(l => l.id === id);
+    if (confirm(`確定把孩子的進度設為「從 ${list[idx].title} 開始」嗎?\n之前 ${idx} 關會標為已完成,其餘關卡與目前進度會被覆寫。`)) {
+      Store.setDoneIds(list.slice(0, idx).map(l => l.id));
+      sessionStorage.removeItem('mathquest-gold'); // 套用後回到學生模式,直接看結果
+      location.hash = '#/'; location.reload();
+    }
   };
   const rb = document.getElementById('resume');
   if (rb) rb.onclick = () => { location.hash = `#/play/${r.id}@${r.i}`; };
