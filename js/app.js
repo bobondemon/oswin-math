@@ -52,7 +52,7 @@ function renderMap() {
     c.subtopics.forEach(s => {
       html += `<div class="sub-title">${s.title}</div>`;
       if (!s.levels.length) { html += `<div class="sub" style="color:var(--mut)">🔒 即將開放</div>`; return; }
-      html += `<div class="path" style="margin-bottom:26px">`;
+      html += `<div class="path" style="margin-bottom:46px">`;
       s.levels.forEach(l => {
         const idx = list.indexOf(l), st = status(l, idx, list);
         html += `<button class="node ${st}" data-id="${l.id}" ${st === 'locked' ? 'disabled' : ''}>

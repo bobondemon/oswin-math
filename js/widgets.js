@@ -182,6 +182,37 @@ const Widgets = (() => {
         Widgets.render(el.querySelector('#ft'));
       };
       k.oninput = draw; draw();
+    },
+    // 絕對值:拖曳 x 與中心 a,看距離 |x - a|
+    absdist(el) {
+      el.innerHTML = `<div class="wd"><div id="ln"></div>
+        <div>中心 a:<input type="range" id="a" min="-8" max="8" value="2"> <b id="av">2</b>
+          &nbsp; 點 x:<input type="range" id="x" min="-10" max="10" value="-3"> <b id="xv">-3</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const a = el.querySelector('#a'), x = el.querySelector('#x');
+      const draw = () => {
+        const av = +a.value, xv = +x.value;
+        el.querySelector('#av').textContent = av; el.querySelector('#xv').textContent = xv;
+        el.querySelector('#ln').innerHTML = line(xv, av);
+        el.querySelector('#ft').innerHTML = tex(`|x - a| = |${xv} - ${av < 0 ? '(' + av + ')' : av}| = ${Math.abs(xv - av)}`) + `<br>藍點 a 到紅點 x 的距離是 <b>${Math.abs(xv - av)}</b>`;
+        Widgets.render(el.querySelector('#ft'));
+      };
+      a.oninput = x.oninput = draw; draw();
+    },
+    // 科學記號:拖曳 10 的指數,看小數點怎麼搬家
+    sci(el) {
+      el.innerHTML = `<div class="wd"><div>指數 n:<input type="range" id="n" min="-6" max="9" value="4"> <b id="nv">4</b></div>
+        <div class="big" id="ft"></div></div>`;
+      const n = el.querySelector('#n');
+      const draw = () => {
+        const nv = +n.value, d = '345'; // 3.45
+        const plain = nv >= 2 ? d + '0'.repeat(nv - 2) : nv >= 0 ? d.slice(0, nv + 1) + (nv < 2 ? '.' + d.slice(nv + 1) : '') : '0.' + '0'.repeat(-nv - 1) + d;
+        const shown = nv >= 3 ? plain.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : plain;
+        el.querySelector('#nv').textContent = nv;
+        el.querySelector('#ft').innerHTML = tex(`3.45\\times10^{${nv}}`) + `<br>= <b>${shown}</b><br><small>n 是正的 → 小數點往右搬 ${nv > 0 ? nv : 0} 位;n 是負的 → 往左搬 ${nv < 0 ? -nv : 0} 位</small>`;
+        Widgets.render(el.querySelector('#ft'));
+      };
+      n.oninput = draw; draw();
     }
   };
   return {
