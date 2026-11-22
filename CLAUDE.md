@@ -59,12 +59,12 @@ index.html          單頁應用外殼(頂端:存檔/讀檔/劇情回顧;頁尾:
 css/style.css       樣式(深色模式、手機版面、劇情卡)
 js/store.js         進度存檔(localStorage 'mathquest-v1':done / wrong / resume)、金手指唯讀模式
 js/gen.js           題目產生器共用工具(隨機、gcd、答案解析與檢查 G.check)
-js/widgets.js       互動小元件 Widgets.mount(name, el)(目前 fracbar、fracequiv、numline、numwalk、eqstep、areamodel、coordpt、funcmachine、linegraph)。`G.plane({pts, line})`(在 `js/gen.js`)可產生座標平面 SVG,題目文字與小元件都能用
+js/widgets.js       互動小元件 Widgets.mount(name, el)(目前 fracbar、fracequiv、numline、numwalk、eqstep、areamodel、coordpt、funcmachine、linegraph、absdist、sci、reflect、slope2、circleplot)。`G.plane({pts, line, shade, circles, segs})`(在 `js/gen.js`)可產生座標平面 SVG,題目文字與小元件都能用
 js/story.js         劇情畫面邏輯(每過一關解鎖一張;渲染劇情卡)
 js/engine.js        關卡引擎:講解 → 題目 → 提示 → 過關(完成時觸發劇情)
 js/app.js           地圖、路由(#/、#/play/<levelId>@<step>、#/story)、存讀檔、金手指
 data/ch0.js         序章內容(window.COURSE = [序章])
-data/ch1gen.js     第 1 章題目產生器(全域 `G1`);data/ch1.js 以 `window.COURSE.push(...)` 加入第 1 章。之後章節照此:`chNgen.js`(產生器)+ `chN.js`(關卡),並在 index.html 加載。**注意**:各 data 檔的頂層 `const` 在瀏覽器裡共用同一命名空間,新檔案的名稱不可與 ch0.js 等重複(例如 `P`、`F`、`LIN`、`nz`、`ex`、`Q` 已被佔用,新檔請加前綴或改名);Node 測試要保留 `const`(不要改成 `var`),才抓得到重複宣告
+data/ch1gen.js     第 1 章題目產生器(全域 `G1`);data/ch1.js 以 `window.COURSE.push(...)` 加入第 1 章;第 2 章同理(`ch2gen.js` 的 `G2`、`ch2.js`)。之後章節照此:`chNgen.js`(產生器)+ `chN.js`(關卡),並在 index.html 加載。**注意**:各 data 檔的頂層 `const` 在瀏覽器裡共用同一命名空間,新檔案的名稱不可與 ch0.js 等重複(例如 `P`、`F`、`LIN`、`nz`、`ex`、`Q` 已被佔用,新檔請加前綴或改名);Node 測試要保留 `const`(不要改成 `var`),才抓得到重複宣告
 data/story.js       劇情畫面 window.STORY[關卡id](每關一張)
 assets/             (之後)story/ 圖片、sound/ 音效、CREDITS.md
 docs/               調查與設計檔(見上)
@@ -102,7 +102,8 @@ docs/               調查與設計檔(見上)
 
 - 已完成:骨架(引擎、地圖、存讀檔、金手指、劇情畫面與劇情回顧)、序章「分數與小數」「正負數運算」「一次方程式」「乘法公式與因式分解」「座標與一次函數」各 4 關與各 4 張劇情畫面(`c0s1l1~4`~`c0s4l1~4` 已有圖;`c0s5l1~4` 已有圖);**序章完成**,含 Boss 關 `c0bossl1`(8 題、三回合、1 張劇情畫面,文字已寫、圖待補)。Boss 的做法:子主題 id `c0boss`、關卡 id `c0bossl1`,講解頁用「回合」小劇情(只有文字),過關後出現 1 張大事件劇情圖、三份調查/設計檔。
 - 第 1 章「數與式」已完成:6 個子主題 + Boss(`c1boss`、`c1bossl1`),共 25 關、25 張劇情畫面(`c1s1l1`~`c1bossl1`,第 22~46 幕;**圖待補**)。新增小元件 `absdist`、`sci`。金手指新增「設定孩子進度」(選一關,它之前的關卡標為已完成;用於存檔遺失時)。
-- 下一步:第 2 章「直線與圓」(劇情:露伴與鈴美,J5、J6)→ 依孩子學校進度擴充。
+- 第 2 章「直線與圓」已完成:6 個子主題 + Boss(`c2boss`、`c2bossl1`),共 22 關、22 段劇情(`c2s1l1`~`c2bossl1`,第 47~68 幕;**圖待補**)。新增小元件 `reflect`、`slope2`、`circleplot`,`G.plane` 新增 `shade`、`circles`、`segs`、虛線。
+- 下一步:第 3 章「多項式函數」(劇情:托尼奧、靜、重清,J7 吉良登場)→ 依孩子學校進度擴充。
 - 待決:
   1. **孩子學校的課本出版社與進度**(章序要不要調整,見 docs/01 第 8 節)。
   2. 劇情圖片已定:AI 生成或剪影(見素材規範);聲音來源(自製/CC0)尚未定;需建立 `assets/CREDITS.md`。

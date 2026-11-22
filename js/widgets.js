@@ -213,6 +213,63 @@ const Widgets = (() => {
         Widgets.render(el.querySelector('#ft'));
       };
       n.oninput = draw; draw();
+    },
+    // 對稱:選對稱的對象,拖曳點 A,看對稱點 A'
+    reflect(el) {
+      const K = [
+        { n: 'x 軸', f: (x, y) => [x, -y] }, { n: 'y 軸', f: (x, y) => [-x, y] }, { n: '原點', f: (x, y) => [-x, -y] },
+        { n: '直線 y = x', f: (x, y) => [y, x], line: { m: 1, b: 0 } }, { n: '直線 y = -x', f: (x, y) => [-y, -x], line: { m: -1, b: 0 } }
+      ];
+      el.innerHTML = `<div class="wd"><div id="pl"></div>
+        <div>x:<input type="range" id="x" min="-6" max="6" value="3"> <b id="xv">3</b>
+          &nbsp; y:<input type="range" id="y" min="-6" max="6" value="2"> <b id="yv">2</b></div>
+        <div>對稱於:<select id="k">${K.map((k, i) => `<option value="${i}">${k.n}</option>`).join('')}</select></div>
+        <div class="big" id="ft"></div></div>`;
+      const x = el.querySelector('#x'), y = el.querySelector('#y'), k = el.querySelector('#k');
+      const draw = () => {
+        const xv = +x.value, yv = +y.value, K1 = K[+k.value], [rx, ry] = K1.f(xv, yv);
+        el.querySelector('#xv').textContent = xv; el.querySelector('#yv').textContent = yv;
+        el.querySelector('#pl').innerHTML = G.plane({ pts: [{ x: xv, y: yv, label: 'A' }, { x: rx, y: ry, label: "A'" }], line: K1.line, segs: [{ x1: xv, y1: yv, x2: rx, y2: ry }] });
+        el.querySelector('#ft').innerHTML = tex(`A(${xv}, ${yv}) \\to A'(${rx}, ${ry})`);
+        Widgets.render(el.querySelector('#ft'));
+      };
+      x.oninput = y.oninput = k.oninput = draw; draw();
+    },
+    // 斜率:拖曳兩點 A、B,看斜率 = 上升量 ÷ 水平量
+    slope2(el) {
+      el.innerHTML = `<div class="wd"><div id="pl"></div>
+        <div>A:x <input type="range" id="x1" min="-5" max="5" value="-2"> <b id="x1v"></b>,y <input type="range" id="y1" min="-5" max="5" value="-1"> <b id="y1v"></b></div>
+        <div>B:x <input type="range" id="x2" min="-5" max="5" value="2"> <b id="x2v"></b>,y <input type="range" id="y2" min="-5" max="5" value="3"> <b id="y2v"></b></div>
+        <div class="big" id="ft"></div></div>`;
+      const q = s => el.querySelector(s), ids = ['x1', 'y1', 'x2', 'y2'];
+      const draw = () => {
+        const [x1, y1, x2, y2] = ids.map(i => +q('#' + i).value);
+        ids.forEach(i => { q('#' + i + 'v').textContent = q('#' + i).value; });
+        const vert = x1 === x2, m = vert ? 0 : (y2 - y1) / (x2 - x1), b = y1 - m * x1;
+        q('#pl').innerHTML = G.plane({ pts: [{ x: x1, y: y1, label: 'A' }, { x: x2, y: y2, label: 'B' }], line: vert ? null : { m, b }, segs: vert ? [{ x1, y1, x2, y2 }] : [] });
+        const dy = y2 - y1, dx = x2 - x1, g = G.gcd(dy, dx) || 1;
+        q('#ft').innerHTML = vert ? '兩點的 x 一樣:鉛直線,<b>斜率不存在</b>' :
+          tex(`m = \\frac{${y2} - ${y1 < 0 ? '(' + y1 + ')' : y1}}{${x2} - ${x1 < 0 ? '(' + x1 + ')' : x1}} = \\frac{${dy}}{${dx}} = ${(() => { const n = (dx < 0 ? -dy : dy) / g, d = Math.abs(dx) / g; return d === 1 ? n : `${n < 0 ? '-' : ''}\\frac{${Math.abs(n)}}{${d}}`; })()}`);
+        Widgets.render(q('#ft'));
+      };
+      ids.forEach(i => { q('#' + i).oninput = draw; }); draw();
+    },
+    // 圓:拖曳圓心 (h, k) 與半徑 r,看標準式
+    circleplot(el) {
+      el.innerHTML = `<div class="wd"><div id="pl"></div>
+        <div>圓心 h:<input type="range" id="h" min="-4" max="4" value="1"> <b id="hv"></b>
+          &nbsp; k:<input type="range" id="k" min="-4" max="4" value="-1"> <b id="kv"></b>
+          &nbsp; 半徑 r:<input type="range" id="r" min="1" max="5" value="3"> <b id="rv"></b></div>
+        <div class="big" id="ft"></div></div>`;
+      const q = s => el.querySelector(s), sub = (v, a) => (a === 0 ? v + '^2' : `(${v} ${a < 0 ? '+' : '-'} ${Math.abs(a)})^2`);
+      const draw = () => {
+        const h = +q('#h').value, k = +q('#k').value, r = +q('#r').value;
+        q('#hv').textContent = h; q('#kv').textContent = k; q('#rv').textContent = r;
+        q('#pl').innerHTML = G.plane({ range: 8, size: 320, circles: [{ h, k, r }], pts: [{ x: h, y: k, label: 'O' }] });
+        q('#ft').innerHTML = tex(`${sub('x', h)} + ${sub('y', k)} = ${r * r}`) + `<br>圓心 (${h}, ${k}),半徑 ${r}`;
+        Widgets.render(q('#ft'));
+      };
+      ['h', 'k', 'r'].forEach(i => { q('#' + i).oninput = draw; }); draw();
     }
   };
   return {

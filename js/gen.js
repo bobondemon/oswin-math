@@ -58,9 +58,21 @@ G.plane = function (o) {
     }
   }
   s += `<text x="${X(R) - 2}" y="${Y(0) - 5}" text-anchor="end" font-size="11" fill="currentColor">x</text><text x="${X(0) + 6}" y="${Y(R) + 10}" font-size="11" fill="currentColor">y</text>`;
+  // 陰影區域(直線 y=mx+b 的上方或下方):o.shade = {m, b, above}
+  if (o.shade) {
+    const sh = o.shade, far = (sh.above ? 1 : -1) * R * 40;
+    s += `<polygon clip-path="url(#${id})" points="${X(-R)},${Y(sh.m * -R + sh.b)} ${X(R)},${Y(sh.m * R + sh.b)} ${X(R)},${Y(far)} ${X(-R)},${Y(far)}" fill="#6c5ce7" fill-opacity="0.2"/>`;
+  }
+  // 圓:o.circles = [{h, k, r}];線段:o.segs = [{x1, y1, x2, y2}]
+  (o.circles || []).forEach(c => {
+    s += `<circle clip-path="url(#${id})" cx="${X(c.h)}" cy="${Y(c.k)}" r="${c.r * u}" fill="rgba(0,184,148,0.08)" stroke="#00b894" stroke-width="3"/>`;
+  });
+  (o.segs || []).forEach(g => {
+    s += `<line x1="${X(g.x1)}" y1="${Y(g.y1)}" x2="${X(g.x2)}" y2="${Y(g.y2)}" stroke="#e17055" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+  });
   if (o.line) {
     const m = o.line.m, b = o.line.b;
-    s += `<line clip-path="url(#${id})" x1="${X(-R)}" y1="${Y(m * -R + b)}" x2="${X(R)}" y2="${Y(m * R + b)}" stroke="#6c5ce7" stroke-width="3"/>`;
+    s += `<line clip-path="url(#${id})" x1="${X(-R)}" y1="${Y(m * -R + b)}" x2="${X(R)}" y2="${Y(m * R + b)}" stroke="#6c5ce7" stroke-width="3"${o.line.dash ? ' stroke-dasharray="7 6"' : ''}/>`;
   }
   (o.pts || []).forEach(p => {
     s += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="#e17055"/>`;
